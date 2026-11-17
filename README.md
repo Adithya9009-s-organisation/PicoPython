@@ -1,2 +1,2 @@
 # picopython
-picopython web env
+picopython repository - software development (python ) on a raspberry pi microcontroller device
