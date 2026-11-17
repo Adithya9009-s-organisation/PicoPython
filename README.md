@@ -42,7 +42,7 @@ git -C micropython apply --ignore-space-change ../patches/windows-qstr-preproces
 ## Build and validation status
 
 First build the source compiler, then the stock baseline and custom board in
-separate directories:
+separate directories, using low parallelism:
 
 ```sh
 make -C micropython/mpy-cross -j2
@@ -52,10 +52,18 @@ make -C micropython/ports/rp2 BOARD_DIR="$PWD/board/PICO_PYTHON" BUILD="$PWD/bui
 
 The custom board uses the RP2350 ARM platform, `PICO_BOARD=pico2`, the
 upstream Pico 2 pin map, and the same 3 MiB flash-storage allocation. The
-Linux Codespace can execute `mpy-cross`; its first stock link exposed the
-conditional module-table issue above, and the build is being retried with the
-compatibility patch. Do not flash; hardware validation remains deferred until
-the builds pass and flashing is separately authorized.
+stock and custom builds now complete in the Linux Codespace. Their UF2 sizes
+are 666,624 bytes and 661,504 bytes, respectively; see
+[`docs/BUILD_RESULTS.md`](docs/BUILD_RESULTS.md) for hashes, tool versions,
+and linker measurements. The size difference alone does not demonstrate that
+optional library implementations were removed. The RP2 port still links
+mbedTLS.
+
+The Windows build remains subject to App Control blocking the locally built
+`mpy-cross.exe`; use an approved Linux build environment rather than
+bypassing that policy. Do not flash: device validation over USB CDC, required
+hardware checks, filesystem persistence, and runtime memory measurements
+remain pending separate authorization and access to the Pico.
 
 For USB REPL testing, use:
 
