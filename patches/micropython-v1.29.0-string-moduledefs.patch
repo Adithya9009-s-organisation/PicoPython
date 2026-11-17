@@ -1,0 +1,10 @@
+diff --git a/py/objmodule.c b/py/objmodule.c
+--- a/py/objmodule.c
++++ b/py/objmodule.c
+@@ -155,1 +155,6 @@
++#if !MICROPY_PY_TSTRINGS
++#undef MODULE_DEF_STRING
++#define MODULE_DEF_STRING
++#endif
++
+ #if MICROPY_HAVE_REGISTERED_EXTENSIBLE_MODULES

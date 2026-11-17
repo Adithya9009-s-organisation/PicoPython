@@ -12,12 +12,17 @@
 # revision. Leave it unchanged until a separately verified source-level
 # change can demonstrate that removing it preserves the required features.
 #
+# MicroPython v1.29.0's generated extensible-module table includes the
+# string module even when MICROPY_PY_TSTRINGS is disabled. Apply the
+# version-specific patch in patches/ to omit that unavailable module without
+# enabling template strings.
+#
 # For Windows builds, use -fno-use-linker-plugin: the host policy blocks the
 # provided compiler's optional LTO plugin, and this source has no LTO flags.
 # The qstr preprocessing rule uses a local Python equivalent of its POSIX
 # cat/sed pipeline so the pinned source can build under the Windows command
 # processor without changing generated firmware features.
 #
-# Current blocker: Windows App Control also blocks executing the newly built
-# mpy-cross.exe (WinError 4551). Do not bypass that policy; a policy-approved,
-# v1.29-compatible mpy-cross executable is needed to freeze Python modules.
+# Windows App Control blocks executing the locally built mpy-cross.exe
+# (WinError 4551); do not bypass that policy. Use the Linux Codespace for
+# builds that require executing mpy-cross.
