@@ -1,0 +1,8 @@
+set(PICO_BOARD "pico2")
+set(MICROPY_FROZEN_MANIFEST "${CMAKE_CURRENT_LIST_DIR}/manifest.py")
+
+if(NOT DEFINED MICROPY_HW_FLASH_STORAGE_BYTES)
+    set(MICROPY_HW_FLASH_STORAGE_BYTES 3145728)
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/../../config/features.cmake")

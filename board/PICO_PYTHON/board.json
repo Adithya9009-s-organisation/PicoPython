@@ -1,0 +1,11 @@
+{
+    "features": [
+        "Dual-core",
+        "External Flash",
+        "USB"
+    ],
+    "mcu": "rp2350",
+    "product": "PicoPython",
+    "url": "https://www.raspberrypi.com/products/raspberry-pi-pico-2/",
+    "vendor": "Raspberry Pi"
+}

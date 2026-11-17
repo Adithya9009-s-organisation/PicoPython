@@ -1,0 +1,6 @@
+/builds/
+**/__pycache__/
+*.py[cod]
+*.uf2
+*.elf
+*.map
