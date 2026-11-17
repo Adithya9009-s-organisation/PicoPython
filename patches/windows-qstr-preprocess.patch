@@ -1,0 +1,55 @@
+diff --git a/py/mkrules.cmake b/py/mkrules.cmake
+--- a/py/mkrules.cmake
++++ b/py/mkrules.cmake
+@@ -152,9 +152,16 @@ add_custom_command(
+ add_custom_command(
+     OUTPUT ${MICROPY_QSTRDEFS_PREPROCESSED}
+-    COMMAND cat ${MICROPY_QSTRDEFS_PY} ${MICROPY_QSTRDEFS_PORT} ${MICROPY_QSTRDEFS_COLLECTED} | sed "s/^Q(.*)/\"&\"/" | ${CMAKE_C_COMPILER} -E ${MICROPY_CPP_FLAGS} - | sed "s/^\\\"\\(Q(.*)\\)\\\"/\\1/" > ${MICROPY_QSTRDEFS_PREPROCESSED}
++    COMMAND ${Python3_EXECUTABLE} ${MICROPY_PY_DIR}/qstr_preprocess.py
++        ${MICROPY_QSTRDEFS_PREPROCESSED}
++        ${CMAKE_C_COMPILER}
++        ${MICROPY_CPP_FLAGS}
++        ${MICROPY_QSTRDEFS_PY}
++        ${MICROPY_QSTRDEFS_PORT}
++        ${MICROPY_QSTRDEFS_COLLECTED}
+     DEPENDS ${MICROPY_QSTRDEFS_PY}
+         ${MICROPY_QSTRDEFS_PORT}
+         ${MICROPY_QSTRDEFS_COLLECTED}
++        ${MICROPY_PY_DIR}/qstr_preprocess.py
+     VERBATIM
+     COMMAND_EXPAND_LISTS
+ )
+diff --git a/py/qstr_preprocess.py b/py/qstr_preprocess.py
+new file mode 100644
+--- /dev/null
++++ b/py/qstr_preprocess.py
+@@ -0,0 +1,29 @@
++import re
++import subprocess
++import sys
++from pathlib import Path
++
++
++if len(sys.argv) < 5:
++    raise SystemExit("expected output, compiler, and three qstr input files")
++
++output_path = Path(sys.argv[1])
++compiler = sys.argv[2]
++qstr_inputs = sys.argv[-3:]
++cpp_flags = sys.argv[3:-3]
++qstr_data = b"".join(Path(path).read_bytes() for path in qstr_inputs)
++qstr_data = re.sub(rb"(?m)^Q\([^\r\n]*", lambda match: b'"' + match[0] + b'"', qstr_data)
++
++result = subprocess.run(
++    [compiler, "-E", *cpp_flags, "-"],
++    input=qstr_data,
++    stdout=subprocess.PIPE,
++    stderr=subprocess.PIPE,
++)
++if result.stderr:
++    sys.stderr.buffer.write(result.stderr)
++if result.returncode:
++    raise SystemExit(result.returncode)
++
++preprocessed = re.sub(rb'(?m)^"(Q\([^\r\n]*)"\r?$', rb"\1", result.stdout)
++output_path.write_bytes(preprocessed)
