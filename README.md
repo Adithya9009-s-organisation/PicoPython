@@ -13,8 +13,7 @@ USB serial without a display.
 - `config/features.cmake`: feature decisions and current build notes.
 - `tests/`: REPL, language, filesystem, hardware API, and memory checks.
 - `micropython/`: upstream MicroPython pinned as a Git submodule.
-- `patches/`: host-build compatibility patches; the Windows patch only adapts
-  qstr preprocessing and does not change firmware features.
+- `patches/`: narrowly scoped MicroPython v1.29.0 build-compatibility patches.
 - `builds/`: local build output; intentionally excluded from Git.
 
 ## Source setup
@@ -25,7 +24,16 @@ git -C micropython submodule update --init --recursive
 ```
 
 The `micropython` gitlink is pinned to the upstream `v1.29.0` commit. On
-Windows, apply the host compatibility patch before building:
+all hosts, apply the conditional module-table fix. The v1.29.0 generator
+includes the `string` module registration even when `MICROPY_PY_TSTRINGS` is
+disabled by the RP2 default; this fix omits that entry without enabling the
+feature:
+
+```sh
+git -C micropython apply ../patches/micropython-v1.29.0-string-moduledefs.patch
+```
+
+On Windows, also apply the qstr preprocessing adaptation:
 
 ```powershell
 git -C micropython apply --ignore-space-change ../patches/windows-qstr-preprocess.patch
@@ -33,17 +41,21 @@ git -C micropython apply --ignore-space-change ../patches/windows-qstr-preproces
 
 ## Build and validation status
 
-Build the unchanged `RPI_PICO2` baseline before the custom board, using
-separate directories under `builds/stock` and `builds/stripped`. The custom
-board uses the RP2350 ARM platform, `PICO_BOARD=pico2`, the upstream Pico 2
-pin map, and the same 3 MiB flash-storage allocation.
+First build the source compiler, then the stock baseline and custom board in
+separate directories:
 
-No firmware image has been produced or flashed yet. In the current Windows
-environment, App Control blocks the generated `mpy-cross.exe`; a
-policy-approved MicroPython v1.29.0-compatible executable is needed to
-complete frozen-module builds. Do not bypass App Control. Flashing remains
-deferred until the stock and custom builds pass validation and is explicitly
-authorized.
+```sh
+make -C micropython/mpy-cross -j2
+make -C micropython/ports/rp2 BOARD=RPI_PICO2 BUILD="$PWD/builds/stock" -j2
+make -C micropython/ports/rp2 BOARD_DIR="$PWD/board/PICO_PYTHON" BUILD="$PWD/builds/stripped" -j2
+```
+
+The custom board uses the RP2350 ARM platform, `PICO_BOARD=pico2`, the
+upstream Pico 2 pin map, and the same 3 MiB flash-storage allocation. The
+Linux Codespace can execute `mpy-cross`; its first stock link exposed the
+conditional module-table issue above, and the build is being retried with the
+compatibility patch. Do not flash; hardware validation remains deferred until
+the builds pass and flashing is separately authorized.
 
 For USB REPL testing, use:
 
