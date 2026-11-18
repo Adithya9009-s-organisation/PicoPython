@@ -72,7 +72,7 @@ it.
 | Measurement | Stock `RPI_PICO2` | Candidate `PICO_PYTHON` |
 | --- | ---: | ---: |
 | UF2 size | 661,504 bytes | 594,944 bytes |
-| UF2 SHA-256 | `e5d5a99efeb8d594683c371afb842ddc8e3a7c7e44713890f47e3664b40001d9` | `4b09496ccd477c8b9c63c18fadba79e9985c42cb5d9886203b432a9c9f2b6aaa` |
+| UF2 SHA-256 | `fe5902a62eb79f76ff9d7d526b4de5b1f3873ab35f1a5fb2fcf065c9218c691b` | `4b09496ccd477c8b9c63c18fadba79e9985c42cb5d9886203b432a9c9f2b6aaa` |
 | ELF text | 340,648 bytes | 307,372 bytes |
 | ELF data | 0 bytes | 0 bytes |
 | ELF bss | 4,696 bytes | 4,504 bytes |
@@ -92,3 +92,8 @@ device-side REPL, filesystem persistence, hardware behavior, and GC heap tests
 remain pending. The existing user-confirmed working UF2 remains the rollback
 baseline. Build artifacts are retained under the ignored Codespace
 `builds/removal-test/` directory.
+
+The reproducibility patch hashes are:
+
+- `micropython-v1.29.0-string-moduledefs.patch`: `49ae4399f7f73b5a4d9e2261a62937afa88cb8446dec723407ec7b432181e238`
+- `micropython-v1.29.0-pruned-features.patch`: `a2c8858dcc49671205bf2a275f853b466ac018e950df722b8ea8cd8898656094`
