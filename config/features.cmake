@@ -1,9 +1,14 @@
-# Conservative first build for MicroPython v1.29.0.
+# Compatibility target for MicroPython v1.29.0.
 #
-# Keep the RP2 port defaults for the VM, USB CDC, VFS, FAT, LittleFS,
-# machine/rp2 peripherals, framebuf, and asyncio. The Pico 2 board does not
-# enable the Wi-Fi or Bluetooth drivers; its current firmware also lacks
-# importable network and bluetooth modules.
+# The current working UF2 is the rollback baseline. The custom board retains
+# framebuf, asyncio/uasyncio, and select as useful general-purpose features.
+# cmath and the specified hardware APIs are removed. Async/await parser/VM
+# support remains available. The candidate builds successfully; device
+# validation is still pending.
+#
+# Preserve the VM, USB CDC, VFS, FAT, LittleFS, errno, io, collections, re,
+# and machine.Pin/SPI/I2C/UART. The Pico 2 board does not enable Wi-Fi or
+# Bluetooth; those modules remain unavailable by design.
 #
 # WebREPL is part of the network feature group and is not needed for USB REPL.
 # USB CDC is enabled by the RP2 port; USB MSC defaults off.
@@ -23,6 +28,5 @@
 # cat/sed pipeline so the pinned source can build under the Windows command
 # processor without changing generated firmware features.
 #
-# Windows App Control blocks executing the locally built mpy-cross.exe
-# (WinError 4551); do not bypass that policy. Use the Linux Codespace for
-# builds that require executing mpy-cross.
+# The user reports that the current custom UF2 works on-device. Preserve it as
+# the known-good rollback image while evaluating compatibility changes.

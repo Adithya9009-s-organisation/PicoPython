@@ -1,0 +1,293 @@
+diff --git a/ports/rp2/CMakeLists.txt b/ports/rp2/CMakeLists.txt
+index ee6f1b8..1a2463c 100644
+--- a/ports/rp2/CMakeLists.txt
++++ b/ports/rp2/CMakeLists.txt
+@@ -77,6 +77,22 @@ if(NOT MICROPY_C_HEAP_SIZE)
+     set(MICROPY_C_HEAP_SIZE 0)
+ endif()
+
++# These options also control whether optional RP2 source files and SDK
++# components are built. Board headers provide the corresponding C macros.
++foreach(feature
++        MICROPY_PY_MACHINE_ADC
++        MICROPY_PY_MACHINE_PWM
++        MICROPY_PY_MACHINE_I2S
++        MICROPY_PY_MACHINE_WDT
++        MICROPY_PY_MACHINE_TIMER
++        MICROPY_PY_RP2_MACHINE_RTC
++        MICROPY_PY_RP2_PIO
++        MICROPY_PY_RP2_DMA)
++    if(NOT DEFINED ${feature})
++        set(${feature} ON)
++    endif()
++endforeach()
++
+ # Enable error text compression by default.
+ if(NOT MICROPY_ROM_TEXT_COMPRESSION)
+     set(MICROPY_ROM_TEXT_COMPRESSION ON)
+@@ -169,9 +185,7 @@ set(MICROPY_SOURCE_PORT
+     machine_bitstream.c
+     machine_i2c.c
+     machine_pin.c
+-    machine_rtc.c
+     machine_spi.c
+-    machine_timer.c
+     main.c
+     modrp2.c
+     mphalport.c
+@@ -180,8 +194,6 @@ set(MICROPY_SOURCE_PORT
+     mutex_extra.c
+     pendsv.c
+     rp2_flash.c
+-    rp2_pio.c
+-    rp2_dma.c
+     uart.c
+     usbd.c
+     msc_disk.c
+@@ -189,30 +201,55 @@ set(MICROPY_SOURCE_PORT
+     ${CMAKE_BINARY_DIR}/pins_${MICROPY_BOARD}.c
+ )
+
++if(MICROPY_PY_RP2_MACHINE_RTC)
++    list(APPEND MICROPY_SOURCE_PORT machine_rtc.c)
++endif()
++if(MICROPY_PY_MACHINE_TIMER)
++    list(APPEND MICROPY_SOURCE_PORT machine_timer.c)
++endif()
++if(MICROPY_PY_RP2_PIO)
++    list(APPEND MICROPY_SOURCE_PORT rp2_pio.c)
++endif()
++if(MICROPY_PY_RP2_DMA)
++    list(APPEND MICROPY_SOURCE_PORT rp2_dma.c)
++endif()
++
+ set(MICROPY_SOURCE_QSTR
+     ${MICROPY_SOURCE_PY}
+     ${MICROPY_DIR}/shared/readline/readline.c
+     ${MICROPY_DIR}/shared/runtime/mpirq.c
+     ${MICROPY_DIR}/shared/runtime/sys_stdio_mphal.c
+     ${MICROPY_DIR}/shared/tinyusb/mp_usbd_runtime.c
+-    ${MICROPY_PORT_DIR}/machine_adc.c
+     ${MICROPY_PORT_DIR}/machine_i2c.c
+     ${MICROPY_PORT_DIR}/machine_pin.c
+-    ${MICROPY_PORT_DIR}/machine_rtc.c
+     ${MICROPY_PORT_DIR}/machine_spi.c
+-    ${MICROPY_PORT_DIR}/machine_timer.c
+     ${MICROPY_PORT_DIR}/machine_uart.c
+-    ${MICROPY_PORT_DIR}/machine_wdt.c
+     ${MICROPY_PORT_DIR}/modrp2.c
+     ${MICROPY_PORT_DIR}/rp2_flash.c
+-    ${MICROPY_PORT_DIR}/rp2_pio.c
+-    ${MICROPY_PORT_DIR}/rp2_dma.c
+     ${CMAKE_BINARY_DIR}/pins_${MICROPY_BOARD}.c
+ )
+
++if(MICROPY_PY_MACHINE_ADC)
++    list(APPEND MICROPY_SOURCE_QSTR ${MICROPY_PORT_DIR}/machine_adc.c)
++endif()
++if(MICROPY_PY_MACHINE_WDT)
++    list(APPEND MICROPY_SOURCE_QSTR ${MICROPY_PORT_DIR}/machine_wdt.c)
++endif()
++if(MICROPY_PY_RP2_MACHINE_RTC)
++    list(APPEND MICROPY_SOURCE_QSTR ${MICROPY_PORT_DIR}/machine_rtc.c)
++endif()
++if(MICROPY_PY_MACHINE_TIMER)
++    list(APPEND MICROPY_SOURCE_QSTR ${MICROPY_PORT_DIR}/machine_timer.c)
++endif()
++if(MICROPY_PY_RP2_PIO)
++    list(APPEND MICROPY_SOURCE_QSTR ${MICROPY_PORT_DIR}/rp2_pio.c)
++endif()
++if(MICROPY_PY_RP2_DMA)
++    list(APPEND MICROPY_SOURCE_QSTR ${MICROPY_PORT_DIR}/rp2_dma.c)
++endif()
++
+ set(PICO_SDK_COMPONENTS
+     boot_bootrom_headers
+-    hardware_adc
+     hardware_base
+     hardware_boot_lock
+     hardware_clocks
+@@ -221,9 +258,7 @@ set(PICO_SDK_COMPONENTS
+     hardware_gpio
+     hardware_i2c
+     hardware_irq
+-    hardware_pio
+     hardware_pll
+-    hardware_pwm
+     hardware_regs
+     hardware_resets
+     hardware_spi
+@@ -258,6 +293,15 @@ set(PICO_SDK_COMPONENTS
+     tinyusb_device
+ )
+
++if(MICROPY_PY_MACHINE_ADC)
++    list(APPEND PICO_SDK_COMPONENTS hardware_adc)
++endif()
++if(MICROPY_PY_MACHINE_PWM)
++    list(APPEND PICO_SDK_COMPONENTS hardware_pwm)
++endif()
++if(MICROPY_PY_MACHINE_I2S OR MICROPY_PY_RP2_PIO)
++    list(APPEND PICO_SDK_COMPONENTS hardware_pio)
++endif()
+ if(PICO_ARM)
+     list(APPEND PICO_SDK_COMPONENTS
+         cmsis_core
+diff --git a/ports/rp2/main.c b/ports/rp2/main.c
+index f43c85e..0fc7514 100644
+--- a/ports/rp2/main.c
++++ b/ports/rp2/main.c
+@@ -210,8 +210,12 @@ int main(int argc, char **argv) {
+         // Initialise sub-systems.
+         readline_init0();
+         machine_pin_init();
++        #if MICROPY_PY_RP2_PIO
+         rp2_pio_init();
++        #endif
++        #if MICROPY_PY_RP2_DMA
+         rp2_dma_init();
++        #endif
+         #if MICROPY_PY_MACHINE_I2S
+         machine_i2s_init0();
+         #endif
+@@ -274,8 +278,12 @@ int main(int argc, char **argv) {
+         #if MICROPY_PY_MACHINE_I2S
+         machine_i2s_deinit_all();
+         #endif
++        #if MICROPY_PY_RP2_DMA
+         rp2_dma_deinit();
++        #endif
++        #if MICROPY_PY_RP2_PIO
+         rp2_pio_deinit();
++        #endif
+         #if MICROPY_PY_BLUETOOTH
+         mp_bluetooth_deinit();
+         #endif
+diff --git a/ports/rp2/modmachine.c b/ports/rp2/modmachine.c
+index fc71177..407952c 100644
+--- a/ports/rp2/modmachine.c
++++ b/ports/rp2/modmachine.c
+@@ -57,10 +57,24 @@
+ #define RP2_RESET_PWRON (1)
+ #define RP2_RESET_WDT (3)
+
++#if MICROPY_PY_RP2_MACHINE_RTC
++#define MICROPY_PY_MACHINE_RTC_GLOBAL \
++    { MP_ROM_QSTR(MP_QSTR_RTC),                 MP_ROM_PTR(&machine_rtc_type) },
++#else
++#define MICROPY_PY_MACHINE_RTC_GLOBAL
++#endif
++
++#if MICROPY_PY_MACHINE_TIMER
++#define MICROPY_PY_MACHINE_TIMER_GLOBAL \
++    { MP_ROM_QSTR(MP_QSTR_Timer),               MP_ROM_PTR(&machine_timer_type) },
++#else
++#define MICROPY_PY_MACHINE_TIMER_GLOBAL
++#endif
++
+ #define MICROPY_PY_MACHINE_EXTRA_GLOBALS \
+     { MP_ROM_QSTR(MP_QSTR_Pin),                 MP_ROM_PTR(&machine_pin_type) }, \
+-    { MP_ROM_QSTR(MP_QSTR_RTC),                 MP_ROM_PTR(&machine_rtc_type) }, \
+-    { MP_ROM_QSTR(MP_QSTR_Timer),               MP_ROM_PTR(&machine_timer_type) }, \
++    MICROPY_PY_MACHINE_RTC_GLOBAL \
++    MICROPY_PY_MACHINE_TIMER_GLOBAL \
+     \
+     { MP_ROM_QSTR(MP_QSTR_PWRON_RESET),         MP_ROM_INT(RP2_RESET_PWRON) }, \
+     { MP_ROM_QSTR(MP_QSTR_WDT_RESET),           MP_ROM_INT(RP2_RESET_WDT) }, \
+diff --git a/ports/rp2/modrp2.c b/ports/rp2/modrp2.c
+index 59c2eb5..5582e5b 100644
+--- a/ports/rp2/modrp2.c
++++ b/ports/rp2/modrp2.c
+@@ -92,10 +92,14 @@ MP_DEFINE_CONST_FUN_OBJ_0(rp2_bootsel_button_obj, rp2_bootsel_button);
+ static const mp_rom_map_elem_t rp2_module_globals_table[] = {
+     { MP_ROM_QSTR(MP_QSTR___name__),            MP_ROM_QSTR(MP_QSTR_rp2) },
+     { MP_ROM_QSTR(MP_QSTR_Flash),               MP_ROM_PTR(&rp2_flash_type) },
++    #if MICROPY_PY_RP2_PIO
+     { MP_ROM_QSTR(MP_QSTR_PIO),                 MP_ROM_PTR(&rp2_pio_type) },
+     { MP_ROM_QSTR(MP_QSTR_StateMachine),        MP_ROM_PTR(&rp2_state_machine_type) },
++    #endif
++    #if MICROPY_PY_RP2_DMA
+     { MP_ROM_QSTR(MP_QSTR_DMA),                 MP_ROM_PTR(&rp2_dma_type) },
+     { MP_ROM_QSTR(MP_QSTR_DMATimer),            MP_ROM_PTR(&rp2_dma_timer_type) },
++    #endif
+     { MP_ROM_QSTR(MP_QSTR_bootsel_button),      MP_ROM_PTR(&rp2_bootsel_button_obj) },
+
+     #if MICROPY_PY_NETWORK_CYW43
+diff --git a/ports/rp2/modrp2.h b/ports/rp2/modrp2.h
+index fc2c5fa..7f4e55f 100644
+--- a/ports/rp2/modrp2.h
++++ b/ports/rp2/modrp2.h
+@@ -29,15 +29,23 @@
+ #include "py/obj.h"
+
+ extern const mp_obj_type_t rp2_flash_type;
++#if MICROPY_PY_RP2_PIO
+ extern const mp_obj_type_t rp2_pio_type;
+ extern const mp_obj_type_t rp2_state_machine_type;
++#endif
++#if MICROPY_PY_RP2_DMA
+ extern const mp_obj_type_t rp2_dma_type;
+ extern const mp_obj_type_t rp2_dma_timer_type;
++#endif
+
++#if MICROPY_PY_RP2_PIO
+ void rp2_pio_init(void);
+ void rp2_pio_deinit(void);
++#endif
+
++#if MICROPY_PY_RP2_DMA
+ void rp2_dma_init(void);
+ void rp2_dma_deinit(void);
++#endif
+
+ #endif // MICROPY_INCLUDED_RP2_MODRP2_H
+diff --git a/ports/rp2/mpconfigport.h b/ports/rp2/mpconfigport.h
+index 3084531..91686b1 100644
+--- a/ports/rp2/mpconfigport.h
++++ b/ports/rp2/mpconfigport.h
+@@ -167,13 +167,17 @@
+ #define MICROPY_PY_MACHINE_BARE_METAL_FUNCS     (1)
+ #define MICROPY_PY_MACHINE_BOOTLOADER           (1)
+ #define MICROPY_PY_MACHINE_DISABLE_IRQ_ENABLE_IRQ (1)
++#ifndef MICROPY_PY_MACHINE_ADC
+ #define MICROPY_PY_MACHINE_ADC                  (1)
++#endif
+ #define MICROPY_PY_MACHINE_ADC_INCLUDEFILE      "ports/rp2/machine_adc.c"
+ #define MICROPY_PY_MACHINE_PIN_MAKE_NEW         mp_pin_make_new
+ #define MICROPY_PY_MACHINE_BITSTREAM            (1)
+ #define MICROPY_PY_MACHINE_DHT_READINTO         (1)
+ #define MICROPY_PY_MACHINE_PULSE                (1)
++#ifndef MICROPY_PY_MACHINE_PWM
+ #define MICROPY_PY_MACHINE_PWM                  (1)
++#endif
+ #define MICROPY_PY_MACHINE_PWM_INCLUDEFILE      "ports/rp2/machine_pwm.c"
+ #ifndef MICROPY_PY_MACHINE_I2C
+ #define MICROPY_PY_MACHINE_I2C                  (1)
+@@ -204,13 +208,27 @@
+ #define MICROPY_PY_MACHINE_UART_INCLUDEFILE     "ports/rp2/machine_uart.c"
+ #define MICROPY_PY_MACHINE_UART_SENDBREAK       (1)
+ #define MICROPY_PY_MACHINE_UART_IRQ             (1)
++#ifndef MICROPY_PY_MACHINE_WDT
+ #define MICROPY_PY_MACHINE_WDT                  (1)
++#endif
+ #define MICROPY_PY_MACHINE_WDT_INCLUDEFILE      "ports/rp2/machine_wdt.c"
+ #ifndef MICROPY_PY_MACHINE_MEM_BACKUP
+ #define MICROPY_PY_MACHINE_MEM_BACKUP           (1)
+ #endif
+ #define MICROPY_PY_MACHINE_MEM_BACKUP_INCLUDEFILE "ports/rp2/machine_mem_backup.c"
+ #define MICROPY_PY_MACHINE_FREQ_NUM_ARGS_MAX    (2)
++#ifndef MICROPY_PY_MACHINE_TIMER
++#define MICROPY_PY_MACHINE_TIMER                (1)
++#endif
++#ifndef MICROPY_PY_RP2_MACHINE_RTC
++#define MICROPY_PY_RP2_MACHINE_RTC              (1)
++#endif
++#ifndef MICROPY_PY_RP2_PIO
++#define MICROPY_PY_RP2_PIO                      (1)
++#endif
++#ifndef MICROPY_PY_RP2_DMA
++#define MICROPY_PY_RP2_DMA                      (1)
++#endif
+ #define MICROPY_PY_ONEWIRE                      (1)
+ #define MICROPY_VFS                             (1)
+ #define MICROPY_VFS_LFS2                        (1)

@@ -2,7 +2,8 @@
 
 PicoPython is a conservative custom MicroPython firmware for the Raspberry Pi
 Pico 2 (RP2350). It uses the MicroPython v1.29.0 RP2 port and keeps the normal
-USB CDC REPL, core Python runtime, filesystem support, and RP2 hardware APIs.
+USB CDC REPL, core Python runtime, filesystem support, and selected RP2 hardware
+APIs.
 Display support is intentionally out of scope; the Pico remains usable over
 USB serial without a display.
 
@@ -11,6 +12,10 @@ USB serial without a display.
 - `board/PICO_PYTHON/`: custom board configuration based on upstream
   `RPI_PICO2` settings.
 - `config/features.cmake`: feature decisions and current build notes.
+- `config/stdlib_manifest.py`: prioritized compatibility module inventory;
+  it does not freeze modules by itself.
+- `docs/PICOPYTHON_V129_COMPATIBILITY.md`: compatibility scope, removal
+  candidates, language audit, and acceptance rules.
 - `tests/`: REPL, language, filesystem, hardware API, and memory checks.
 - `micropython/`: upstream MicroPython pinned as a Git submodule.
 - `patches/`: narrowly scoped MicroPython v1.29.0 build-compatibility patches.
@@ -31,6 +36,7 @@ feature:
 
 ```sh
 git -C micropython apply ../patches/micropython-v1.29.0-string-moduledefs.patch
+git -C micropython apply ../patches/micropython-v1.29.0-pruned-features.patch
 ```
 
 On Windows, also apply the qstr preprocessing adaptation:
@@ -55,15 +61,23 @@ upstream Pico 2 pin map, and the same 3 MiB flash-storage allocation. The
 stock and custom builds now complete in the Linux Codespace. Their UF2 sizes
 are 666,624 bytes and 661,504 bytes, respectively; see
 [`docs/BUILD_RESULTS.md`](docs/BUILD_RESULTS.md) for hashes, tool versions,
-and linker measurements. The size difference alone does not demonstrate that
-optional library implementations were removed. The RP2 port still links
-mbedTLS.
+and linker measurements. These are baseline measurements, not measurements
+of the current removal candidate. The RP2 port still links mbedTLS.
 
-The Windows build remains subject to App Control blocking the locally built
-`mpy-cross.exe`; use an approved Linux build environment rather than
-bypassing that policy. Do not flash: device validation over USB CDC, required
-hardware checks, filesystem persistence, and runtime memory measurements
-remain pending separate authorization and access to the Pico.
+The user reports that the current custom UF2 works on-device; preserve it as
+the rollback baseline. The Windows build remains subject to App Control
+blocking the locally built `mpy-cross.exe`; use an approved Linux build
+environment rather than bypassing that policy. Compatibility changes are not
+flashed automatically: first build and review a candidate, then get separate
+authorization before replacing the working image. Full module/language
+coverage, filesystem persistence, hardware API, and runtime memory results
+remain to be recorded.
+
+The reviewed compatibility candidate retains asyncio/uasyncio, select, and
+framebuf. It is 626,688 bytes and uses UF2 SHA-256
+`7c03974c6ac6066253f86756bf089ccfe0f1b454516dbcdc303c747eb68ec158`.
+See [`docs/PR_REVIEW_REPORT.md`](docs/PR_REVIEW_REPORT.md) for the source
+review and outstanding hardware risks.
 
 For USB REPL testing, use:
 
