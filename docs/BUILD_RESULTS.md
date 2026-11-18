@@ -11,8 +11,10 @@
 - Compatibility patch: `patches/micropython-v1.29.0-string-moduledefs.patch`
 
 The source compiler `mpy-cross` was built and run natively in Linux. The
-stock and custom builds then completed without modifying the MicroPython
-submodule's pinned commit.
+stock and custom builds then completed without changing the MicroPython
+submodule's pinned commit. The user reports the current custom UF2 works
+on-device; exact device-side test results and runtime measurements have not
+yet been recorded here.
 
 ## Artifacts
 
@@ -52,8 +54,9 @@ or other libraries was stripped. The v1.29.0 RP2 port still links mbedTLS.
 Keep the first firmware conservative until individual feature removals are
 proven against the required APIs.
 
-No firmware was flashed. USB CDC REPL operation, language tests on-device,
-filesystem persistence, hardware APIs, and GC heap measurements remain
-unverified. The Codespace has no access to the user's local COM8 device.
-Flashing and device validation remain deferred pending separate
-authorization.
+The successful cross-build process did not flash the firmware. The user
+reports that the current custom UF2 works, but this Codespace cannot
+independently access the local COM8 device or verify the full acceptance
+suite: language behavior, filesystem persistence, hardware APIs, and GC heap
+measurements remain to be recorded. Do not overwrite or format the device's
+filesystem during tests.

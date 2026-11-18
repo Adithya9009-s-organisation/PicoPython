@@ -11,6 +11,10 @@ USB serial without a display.
 - `board/PICO_PYTHON/`: custom board configuration based on upstream
   `RPI_PICO2` settings.
 - `config/features.cmake`: feature decisions and current build notes.
+- `config/stdlib_manifest.py`: prioritized compatibility module inventory;
+  it does not freeze modules by itself.
+- `docs/PICOPYTHON_V129_COMPATIBILITY.md`: compatibility scope, removal
+  candidates, language audit, and acceptance rules.
 - `tests/`: REPL, language, filesystem, hardware API, and memory checks.
 - `micropython/`: upstream MicroPython pinned as a Git submodule.
 - `patches/`: narrowly scoped MicroPython v1.29.0 build-compatibility patches.
