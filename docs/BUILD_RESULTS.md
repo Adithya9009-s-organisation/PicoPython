@@ -69,23 +69,27 @@ removes the selected Python modules and hardware APIs; the Pico SDK DMA driver
 remains linked because the retained RP2 SPI implementation includes and uses
 it.
 
-| Measurement | Stock `RPI_PICO2` | Candidate `PICO_PYTHON` |
+| Measurement | Stock `RPI_PICO2` | Reviewed candidate `PICO_PYTHON` |
 | --- | ---: | ---: |
-| UF2 size | 661,504 bytes | 594,944 bytes |
-| UF2 SHA-256 | `fe5902a62eb79f76ff9d7d526b4de5b1f3873ab35f1a5fb2fcf065c9218c691b` | `4b09496ccd477c8b9c63c18fadba79e9985c42cb5d9886203b432a9c9f2b6aaa` |
-| ELF text | 340,648 bytes | 307,372 bytes |
+| UF2 size | 661,504 bytes | 626,688 bytes |
+| UF2 SHA-256 | `fe5902a62eb79f76ff9d7d526b4de5b1f3873ab35f1a5fb2fcf065c9218c691b` | `7c03974c6ac6066253f86756bf089ccfe0f1b454516dbcdc303c747eb68ec158` |
+| ELF text | 340,648 bytes | 323,272 bytes |
 | ELF data | 0 bytes | 0 bytes |
-| ELF bss | 4,696 bytes | 4,504 bytes |
-| Linker-reported flash use | 330,412 bytes | 297,136 bytes |
-| Linker-reported RAM use | 23,232 bytes | 22,608 bytes |
+| ELF bss | 4,696 bytes | 4,508 bytes |
+| Linker-reported flash use | 330,412 bytes | 313,036 bytes |
+| Linker-reported RAM use | 23,232 bytes | 22,612 bytes |
 
-The candidate UF2 is 66,560 bytes smaller (10.06%) than this stock build.
+The reviewed candidate UF2 is 34,816 bytes smaller (5.26%) than this stock build.
+It retains asyncio/uasyncio, select, and framebuf. An equivalent build with
+asyncio but framebuf disabled measured 615,936 bytes; the framebuf-only cost
+was therefore 10,752 bytes. Removing asyncio plus framebuf measured 594,944
+bytes, but that is no longer the reviewed compatibility candidate.
 `picotool` identifies both images as RP2350 ARM Secure firmware for `pico2`,
-with USB REPL enabled and the same 3 MiB writable embedded drive. The stock
-image lists `asyncio` and `uasyncio`; neither appears in the candidate's frozen
-modules. The candidate also has no linked RP2 PIO/DMA API types or machine
-ADC/PWM/RTC/Timer/WDT types. `mpy-cross` compiled the syntax, async/await,
-module, and hardware acceptance scripts successfully.
+with USB REPL enabled and the same 3 MiB writable embedded drive. Both the
+stock and reviewed candidate list `asyncio` and `uasyncio`; the candidate also
+lists framebuf and select support. The candidate has no linked RP2 PIO/DMA API
+types or machine ADC/PWM/RTC/Timer/WDT types. `mpy-cross` compiled the syntax,
+async/await, module, and hardware acceptance scripts successfully.
 
 These are build-time results only. No candidate firmware has been flashed;
 device-side REPL, filesystem persistence, hardware behavior, and GC heap tests
@@ -96,4 +100,4 @@ baseline. Build artifacts are retained under the ignored Codespace
 The reproducibility patch hashes are:
 
 - `micropython-v1.29.0-string-moduledefs.patch`: `49ae4399f7f73b5a4d9e2261a62937afa88cb8446dec723407ec7b432181e238`
-- `micropython-v1.29.0-pruned-features.patch`: `a2c8858dcc49671205bf2a275f853b466ac018e950df722b8ea8cd8898656094`
+- `micropython-v1.29.0-pruned-features.patch`: `ef721c68855e9559e947c2a30d6d154f880f635cdcf546a12e938814db923daa`

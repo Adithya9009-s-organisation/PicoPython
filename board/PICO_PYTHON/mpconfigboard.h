@@ -1,9 +1,9 @@
 #define MICROPY_HW_BOARD_NAME "PicoPython (Raspberry Pi Pico 2)"
 
-#define MICROPY_PY_FRAMEBUF (0)
-#define MICROPY_PY_ASYNCIO (0)
+#define MICROPY_PY_FRAMEBUF (1)
+#define MICROPY_PY_ASYNCIO (1)
 #define MICROPY_PY_CMATH (0)
-#define MICROPY_PY_SELECT (0)
+#define MICROPY_PY_SELECT (1)
 
 #define MICROPY_PY_MACHINE_ADC (0)
 #define MICROPY_PY_MACHINE_PWM (0)

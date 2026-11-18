@@ -56,11 +56,11 @@ MODULE_DEPENDENCIES = {
 
 REMOVALS = {
     "modules": {
-        "framebuf": "disabled in custom board; build/device validation pending",
-        "asyncio": "disabled and omitted from custom frozen manifest; keep async/await syntax",
-        "uasyncio": "omitted with asyncio from the custom frozen manifest",
+        "framebuf": "retained for general Python graphics compatibility",
+        "asyncio": "retained with uasyncio and select for cooperative tasking",
+        "uasyncio": "retained compatibility alias with the asyncio library",
         "cmath": "disabled in custom board; ordinary math support remains",
-        "select": "disabled with asyncio; no RP2 VFS dependency was found",
+        "select": "retained because asyncio depends on it",
         "errno": "review only; preserve until error-path dependencies are verified",
     },
     "machine_apis": {
@@ -79,11 +79,7 @@ REMOVALS = {
 
 CANDIDATE_REMOVALS = {
     "modules_configured_off": (
-        "framebuf",
-        "asyncio",
-        "uasyncio",
         "cmath",
-        "select",
     ),
     "machine_apis_configured_off": (
         "machine.ADC",
@@ -98,7 +94,19 @@ CANDIDATE_REMOVALS = {
         "rp2.DMATimer",
     ),
     "validation_status": "candidate firmware builds; device tests pending",
-    "retained": ("errno", "io", "async/await syntax", "Pin", "SPI", "I2C", "UART"),
+    "retained": (
+        "errno",
+        "io",
+        "async/await syntax",
+        "asyncio",
+        "uasyncio",
+        "select",
+        "framebuf",
+        "Pin",
+        "SPI",
+        "I2C",
+        "UART",
+    ),
 }
 
 ADDITIONS = {

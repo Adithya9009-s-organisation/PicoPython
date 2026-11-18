@@ -5,7 +5,10 @@ import json
 import re
 import struct
 
-for name in ("framebuf", "asyncio", "uasyncio", "cmath", "select"):
+for name in ("framebuf", "asyncio", "uasyncio", "select"):
+    __import__(name)
+
+for name in ("cmath",):
     try:
         __import__(name)
     except ImportError:

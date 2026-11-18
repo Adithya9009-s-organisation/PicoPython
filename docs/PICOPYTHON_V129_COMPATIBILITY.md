@@ -64,10 +64,10 @@ integration is not evidence that the RP2 filesystem depends on `select`.
 
 ### Current custom-board candidate
 
-The custom board now disables `framebuf`, `asyncio`, `cmath`, and `select`
-through its feature macros and omits the frozen asyncio manifest include.
-Async/await parser and VM support remains enabled. `errno`, `io`, and the
-default RP2 frozen modules remain included.
+The custom board retains `framebuf`, `asyncio`, `uasyncio`, and `select`
+and includes the frozen asyncio manifest. Async/await parser and VM support
+remain enabled. `errno`, `io`, and the default RP2 frozen modules remain
+included.
 
 The custom board also disables the specified machine APIs and `rp2.PIO` /
 `DMA` surfaces. A version-pinned RP2 source patch gates API registration,

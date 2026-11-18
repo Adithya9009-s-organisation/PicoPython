@@ -1,9 +1,10 @@
 # Compatibility target for MicroPython v1.29.0.
 #
-# The current working UF2 is the rollback baseline. The custom board now
-# configures framebuf, asyncio/uasyncio, cmath, select, and the specified
-# hardware APIs for removal. Keep async/await parser/VM support. The candidate
-# builds successfully; device validation is still pending.
+# The current working UF2 is the rollback baseline. The custom board retains
+# framebuf, asyncio/uasyncio, and select as useful general-purpose features.
+# cmath and the specified hardware APIs are removed. Async/await parser/VM
+# support remains available. The candidate builds successfully; device
+# validation is still pending.
 #
 # Preserve the VM, USB CDC, VFS, FAT, LittleFS, errno, io, collections, re,
 # and machine.Pin/SPI/I2C/UART. The Pico 2 board does not enable Wi-Fi or

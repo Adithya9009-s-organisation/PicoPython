@@ -73,6 +73,12 @@ authorization before replacing the working image. Full module/language
 coverage, filesystem persistence, hardware API, and runtime memory results
 remain to be recorded.
 
+The reviewed compatibility candidate retains asyncio/uasyncio, select, and
+framebuf. It is 626,688 bytes and uses UF2 SHA-256
+`7c03974c6ac6066253f86756bf089ccfe0f1b454516dbcdc303c747eb68ec158`.
+See [`docs/PR_REVIEW_REPORT.md`](docs/PR_REVIEW_REPORT.md) for the source
+review and outstanding hardware risks.
+
 For USB REPL testing, use:
 
 ```powershell

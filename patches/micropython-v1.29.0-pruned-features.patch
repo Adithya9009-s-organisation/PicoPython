@@ -5,7 +5,7 @@ index ee6f1b8..1a2463c 100644
 @@ -77,6 +77,22 @@ if(NOT MICROPY_C_HEAP_SIZE)
      set(MICROPY_C_HEAP_SIZE 0)
  endif()
- 
+
 +# These options also control whether optional RP2 source files and SDK
 +# components are built. Board headers provide the corresponding C macros.
 +foreach(feature
@@ -47,7 +47,7 @@ index ee6f1b8..1a2463c 100644
 @@ -189,30 +201,55 @@ set(MICROPY_SOURCE_PORT
      ${CMAKE_BINARY_DIR}/pins_${MICROPY_BOARD}.c
  )
- 
+
 +if(MICROPY_PY_RP2_MACHINE_RTC)
 +    list(APPEND MICROPY_SOURCE_PORT machine_rtc.c)
 +endif()
@@ -81,7 +81,7 @@ index ee6f1b8..1a2463c 100644
 -    ${MICROPY_PORT_DIR}/rp2_dma.c
      ${CMAKE_BINARY_DIR}/pins_${MICROPY_BOARD}.c
  )
- 
+
 +if(MICROPY_PY_MACHINE_ADC)
 +    list(APPEND MICROPY_SOURCE_QSTR ${MICROPY_PORT_DIR}/machine_adc.c)
 +endif()
@@ -120,7 +120,7 @@ index ee6f1b8..1a2463c 100644
 @@ -258,6 +293,15 @@ set(PICO_SDK_COMPONENTS
      tinyusb_device
  )
- 
+
 +if(MICROPY_PY_MACHINE_ADC)
 +    list(APPEND PICO_SDK_COMPONENTS hardware_adc)
 +endif()
@@ -170,7 +170,7 @@ index fc71177..407952c 100644
 @@ -57,10 +57,24 @@
  #define RP2_RESET_PWRON (1)
  #define RP2_RESET_WDT (3)
- 
+
 +#if MICROPY_PY_RP2_MACHINE_RTC
 +#define MICROPY_PY_MACHINE_RTC_GLOBAL \
 +    { MP_ROM_QSTR(MP_QSTR_RTC),                 MP_ROM_PTR(&machine_rtc_type) },
@@ -211,7 +211,7 @@ index 59c2eb5..5582e5b 100644
      { MP_ROM_QSTR(MP_QSTR_DMATimer),            MP_ROM_PTR(&rp2_dma_timer_type) },
 +    #endif
      { MP_ROM_QSTR(MP_QSTR_bootsel_button),      MP_ROM_PTR(&rp2_bootsel_button_obj) },
- 
+
      #if MICROPY_PY_NETWORK_CYW43
 diff --git a/ports/rp2/modrp2.h b/ports/rp2/modrp2.h
 index fc2c5fa..7f4e55f 100644
@@ -219,7 +219,7 @@ index fc2c5fa..7f4e55f 100644
 +++ b/ports/rp2/modrp2.h
 @@ -29,15 +29,23 @@
  #include "py/obj.h"
- 
+
  extern const mp_obj_type_t rp2_flash_type;
 +#if MICROPY_PY_RP2_PIO
  extern const mp_obj_type_t rp2_pio_type;
@@ -229,17 +229,17 @@ index fc2c5fa..7f4e55f 100644
  extern const mp_obj_type_t rp2_dma_type;
  extern const mp_obj_type_t rp2_dma_timer_type;
 +#endif
- 
+
 +#if MICROPY_PY_RP2_PIO
  void rp2_pio_init(void);
  void rp2_pio_deinit(void);
 +#endif
- 
+
 +#if MICROPY_PY_RP2_DMA
  void rp2_dma_init(void);
  void rp2_dma_deinit(void);
 +#endif
- 
+
  #endif // MICROPY_INCLUDED_RP2_MODRP2_H
 diff --git a/ports/rp2/mpconfigport.h b/ports/rp2/mpconfigport.h
 index 3084531..91686b1 100644
