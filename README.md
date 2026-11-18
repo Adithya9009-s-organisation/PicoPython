@@ -63,11 +63,14 @@ and linker measurements. The size difference alone does not demonstrate that
 optional library implementations were removed. The RP2 port still links
 mbedTLS.
 
-The Windows build remains subject to App Control blocking the locally built
-`mpy-cross.exe`; use an approved Linux build environment rather than
-bypassing that policy. Do not flash: device validation over USB CDC, required
-hardware checks, filesystem persistence, and runtime memory measurements
-remain pending separate authorization and access to the Pico.
+The user reports that the current custom UF2 works on-device; preserve it as
+the rollback baseline. The Windows build remains subject to App Control
+blocking the locally built `mpy-cross.exe`; use an approved Linux build
+environment rather than bypassing that policy. Compatibility changes are not
+flashed automatically: first build and review a candidate, then get separate
+authorization before replacing the working image. Full module/language
+coverage, filesystem persistence, hardware API, and runtime memory results
+remain to be recorded.
 
 For USB REPL testing, use:
 
