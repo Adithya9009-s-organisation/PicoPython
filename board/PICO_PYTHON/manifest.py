@@ -1,1 +1,5 @@
-include("$(PORT_DIR)/boards/manifest.py")
+freeze("$(PORT_DIR)/modules")
+require("onewire")
+require("ds18x20")
+require("dht")
+require("neopixel")

@@ -2,7 +2,8 @@
 
 PicoPython is a conservative custom MicroPython firmware for the Raspberry Pi
 Pico 2 (RP2350). It uses the MicroPython v1.29.0 RP2 port and keeps the normal
-USB CDC REPL, core Python runtime, filesystem support, and RP2 hardware APIs.
+USB CDC REPL, core Python runtime, filesystem support, and selected RP2 hardware
+APIs.
 Display support is intentionally out of scope; the Pico remains usable over
 USB serial without a display.
 
@@ -35,6 +36,7 @@ feature:
 
 ```sh
 git -C micropython apply ../patches/micropython-v1.29.0-string-moduledefs.patch
+git -C micropython apply ../patches/micropython-v1.29.0-pruned-features.patch
 ```
 
 On Windows, also apply the qstr preprocessing adaptation:
@@ -59,9 +61,8 @@ upstream Pico 2 pin map, and the same 3 MiB flash-storage allocation. The
 stock and custom builds now complete in the Linux Codespace. Their UF2 sizes
 are 666,624 bytes and 661,504 bytes, respectively; see
 [`docs/BUILD_RESULTS.md`](docs/BUILD_RESULTS.md) for hashes, tool versions,
-and linker measurements. The size difference alone does not demonstrate that
-optional library implementations were removed. The RP2 port still links
-mbedTLS.
+and linker measurements. These are baseline measurements, not measurements
+of the current removal candidate. The RP2 port still links mbedTLS.
 
 The user reports that the current custom UF2 works on-device; preserve it as
 the rollback baseline. The Windows build remains subject to App Control

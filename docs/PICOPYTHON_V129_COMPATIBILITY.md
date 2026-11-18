@@ -62,6 +62,23 @@ imports `select` and its stream module imports `errno`. This supports removing
 RP2 uses its own FAT/LittleFS VFS paths; the generic POSIX VFS select
 integration is not evidence that the RP2 filesystem depends on `select`.
 
+### Current custom-board candidate
+
+The custom board now disables `framebuf`, `asyncio`, `cmath`, and `select`
+through its feature macros and omits the frozen asyncio manifest include.
+Async/await parser and VM support remains enabled. `errno`, `io`, and the
+default RP2 frozen modules remain included.
+
+The custom board also disables the specified machine APIs and `rp2.PIO` /
+`DMA` surfaces. A version-pinned RP2 source patch gates API registration,
+startup/deinit calls, source/QSTR lists, and optional ADC/PWM/PIO SDK
+components. The Pico SDK DMA driver remains linked because retained
+`machine.SPI` depends on it; removing `rp2.DMA` does not remove that internal
+dependency. Timer and watchdog clock/SDK support required internally by the
+port remains available. These are source-level candidate changes only:
+the candidate has not yet been rebuilt or device-tested, and the working UF2
+remains the rollback baseline.
+
 ### Initial v1.29.0 parser probe
 
 The test cases were compiled independently by the v1.29.0 `mpy-cross` built
@@ -78,8 +95,9 @@ The supported cases are in `tests/language/syntax_compat.py`. Syntax support
 does not guarantee identical CPython runtime semantics; for example,
 exception-cause introspection and annotation storage still need device tests.
 `tests/modules/compatibility.py` and `tests/hardware/api_surface.py` encode the
-target's removal decisions; they are expected to fail on the current
-unmodified-feature baseline until those removals are implemented.
+target's removal decisions. They should be run against the newly built
+candidate; the existing working UF2 predates these removals and is not expected
+to pass them.
 
 | Candidate | Target | Audit constraint |
 | --- | --- | --- |

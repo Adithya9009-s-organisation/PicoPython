@@ -56,25 +56,49 @@ MODULE_DEPENDENCIES = {
 
 REMOVALS = {
     "modules": {
-        "framebuf": "remove",
-        "asyncio": "remove library; retain async/await language syntax",
-        "uasyncio": "remove frozen library with asyncio",
-        "cmath": "remove after checking shared numeric dependencies",
-        "select": "remove only if VFS, stream, socket, and port dependencies permit",
+        "framebuf": "disabled in custom board; build/device validation pending",
+        "asyncio": "disabled and omitted from custom frozen manifest; keep async/await syntax",
+        "uasyncio": "omitted with asyncio from the custom frozen manifest",
+        "cmath": "disabled in custom board; ordinary math support remains",
+        "select": "disabled with asyncio; no RP2 VFS dependency was found",
         "errno": "review only; preserve until error-path dependencies are verified",
     },
     "machine_apis": {
-        "machine.ADC": "explicitly enabled in RP2 port config; audit init/users",
-        "machine.PWM": "explicitly enabled in RP2 port config; audit init/users",
-        "machine.I2S": "enabled by RP2 defaults; audit init/users",
-        "machine.RTC": "RP2-specific implementation; audit clock/time init",
-        "machine.WDT": "explicitly enabled; audit startup/reset behavior",
-        "machine.Timer": "RP2-specific implementation; audit internal alarms",
-        "rp2.PIO": "registered unconditionally; audit source and peripheral users",
-        "rp2.StateMachine": "registered unconditionally with PIO",
-        "rp2.DMA": "registered unconditionally; audit shared DMA users",
-        "rp2.DMATimer": "registered unconditionally with DMA",
+        "machine.ADC": "disabled in custom board; ADC SDK component omitted",
+        "machine.PWM": "disabled in custom board; PWM SDK component omitted",
+        "machine.I2S": "disabled; no I2S startup/deinit is performed",
+        "machine.RTC": "registration and RP2 implementation omitted; port time init remains",
+        "machine.WDT": "Python API disabled; watchdog SDK remains for reset support",
+        "machine.Timer": "registration and RP2 implementation omitted; port soft timers remain",
+        "rp2.PIO": "registration, startup, source, and PIO SDK component omitted",
+        "rp2.StateMachine": "omitted with rp2.PIO",
+        "rp2.DMA": "API and source omitted; SDK DMA remains for retained machine.SPI",
+        "rp2.DMATimer": "omitted with rp2.DMA",
     },
+}
+
+CANDIDATE_REMOVALS = {
+    "modules_configured_off": (
+        "framebuf",
+        "asyncio",
+        "uasyncio",
+        "cmath",
+        "select",
+    ),
+    "machine_apis_configured_off": (
+        "machine.ADC",
+        "machine.PWM",
+        "machine.I2S",
+        "machine.RTC",
+        "machine.WDT",
+        "machine.Timer",
+        "rp2.PIO",
+        "rp2.StateMachine",
+        "rp2.DMA",
+        "rp2.DMATimer",
+    ),
+    "validation_status": "candidate firmware builds; device tests pending",
+    "retained": ("errno", "io", "async/await syntax", "Pin", "SPI", "I2C", "UART"),
 }
 
 ADDITIONS = {
