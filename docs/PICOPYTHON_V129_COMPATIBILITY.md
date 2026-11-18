@@ -77,6 +77,9 @@ from the pinned source:
 The supported cases are in `tests/language/syntax_compat.py`. Syntax support
 does not guarantee identical CPython runtime semantics; for example,
 exception-cause introspection and annotation storage still need device tests.
+`tests/modules/compatibility.py` and `tests/hardware/api_surface.py` encode the
+target's removal decisions; they are expected to fail on the current
+unmodified-feature baseline until those removals are implemented.
 
 | Candidate | Target | Audit constraint |
 | --- | --- | --- |
