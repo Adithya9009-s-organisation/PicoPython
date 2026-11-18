@@ -3,7 +3,7 @@ def identity(function):
 
 
 @identity
-def decorated(value: int, /, extra=0, *, offset=0) -> int:
+def decorated(value: int, extra=0, *, offset=0) -> int:
     return value + extra + offset
 
 

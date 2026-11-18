@@ -56,6 +56,28 @@ firmware build, not only definitions added to the custom board header. Check
 the port's startup paths and shared SDK dependencies before excluding source
 files. Keep these details synchronized with `config/stdlib_manifest.py`.
 
+The source dependency check also found that MicroPython's frozen asyncio core
+imports `select` and its stream module imports `errno`. This supports removing
+`asyncio` and `select` together, while retaining `errno` as specified. The
+RP2 uses its own FAT/LittleFS VFS paths; the generic POSIX VFS select
+integration is not evidence that the RP2 filesystem depends on `select`.
+
+### Initial v1.29.0 parser probe
+
+The test cases were compiled independently by the v1.29.0 `mpy-cross` built
+from the pinned source:
+
+- Supported: f-strings, decorators, generator expressions, set/dict
+  comprehensions, keyword-only arguments, function annotations, async/await,
+  assignment expressions, exception-chaining syntax, extended unpacking,
+  keyword unpacking, `nonlocal`, and annotated assignments.
+- Not supported: positional-only arguments (`/`) and structural pattern
+  matching (`match`/`case`); both probes produce `SyntaxError`.
+
+The supported cases are in `tests/language/syntax_compat.py`. Syntax support
+does not guarantee identical CPython runtime semantics; for example,
+exception-cause introspection and annotation storage still need device tests.
+
 | Candidate | Target | Audit constraint |
 | --- | --- | --- |
 | `framebuf` | Remove | Display is on the other Pico; check module build guard. |
@@ -139,16 +161,17 @@ behavioral cases on the board:
 | Decorators | Keep and verify application/order. |
 | Generator expressions | Keep and verify iteration. |
 | Set/dict comprehensions | Keep and verify results. |
-| Keyword-only / positional-only arguments | Keep and verify argument errors and binding. |
+| Keyword-only arguments | Keep and verify argument errors and binding. |
+| Positional-only arguments (`/`) | Current v1.29.0 parser probe rejects this syntax; a compiler/runtime change is needed to meet the target. |
 | Function annotations | Keep syntax; document annotation introspection differences. |
 | Async / await | Keep syntax and VM support, even if the `asyncio` library is removed. |
-| Assignment expressions (`:=`) | Investigate compile and runtime behavior. |
-| Structural pattern matching (`match` / `case`) | Investigate parser support; do not claim support without a compiler probe. |
-| Exception chaining (`raise X from err`) | Investigate parse and exception-cause behavior separately. |
+| Assignment expressions (`:=`) | Parser probe passes; run runtime behavior test. |
+| Structural pattern matching (`match` / `case`) | Current v1.29.0 parser rejects this syntax; leave as an explicit gap unless implemented and tested. |
+| Exception chaining (`raise X from err`) | Parser probe passes; test exception-cause behavior separately. |
 | Extended unpacking | Keep and verify assignment and call unpacking. |
 | Keyword unpacking (`**kwargs`) | Keep and verify. |
 | `nonlocal` | Keep and verify closure updates. |
-| Type-annotated assignments | Investigate parser/runtime behavior. |
+| Type-annotated assignments | Parser probe passes; test runtime behavior and annotation storage. |
 
 ## Explicit exclusions
 

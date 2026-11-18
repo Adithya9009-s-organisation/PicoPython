@@ -41,6 +41,19 @@ CURRENT_MODULES = {
     "implementation_exists_but_disabled_by_default": ("weakref",),
 }
 
+MODULE_DEPENDENCIES = {
+    "asyncio": ("imports select in extmod/asyncio/core.py",),
+    "errno": (
+        "imported by extmod/asyncio/stream.py",
+        "retain error constants and errno mapping for I/O/VFS compatibility",
+    ),
+    "select": (
+        "used by frozen asyncio; remove both together",
+        "generic POSIX VFS integration is not used as RP2 VFS evidence",
+    ),
+    "io": ("used by builtins and sys standard streams",),
+}
+
 REMOVALS = {
     "modules": {
         "framebuf": "remove",
@@ -116,6 +129,29 @@ EXISTING_MODULE_AUDIT = {
     "re": "extend only for demonstrated compatibility gaps",
     "collections": "extend only for demonstrated compatibility gaps",
     "heapq": "check whether the port already provides it; do not duplicate",
+}
+
+LANGUAGE_AUDIT = {
+    "supported_by_v1_29_mpy_cross_probe": (
+        "f-strings",
+        "decorators",
+        "generator expressions",
+        "set comprehensions",
+        "dict comprehensions",
+        "keyword-only arguments",
+        "function annotations",
+        "async/await syntax",
+        "assignment expressions",
+        "exception chaining syntax",
+        "extended unpacking",
+        "keyword unpacking",
+        "nonlocal",
+        "annotated assignments",
+    ),
+    "not_supported_by_v1_29_mpy_cross_probe": (
+        "positional-only arguments",
+        "structural pattern matching",
+    ),
 }
 
 EXCLUDED = (
