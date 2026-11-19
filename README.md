@@ -20,6 +20,7 @@ USB serial without a display.
 - `micropython/`: upstream MicroPython pinned as a Git submodule.
 - `patches/`: narrowly scoped MicroPython v1.29.0 build-compatibility patches.
 - `builds/`: local build output; intentionally excluded from Git.
+- `releases/v1.29.0/`: versioned RP2350 firmware candidates and comparison images.
 
 ## Source setup
 
@@ -64,20 +65,24 @@ are 666,624 bytes and 661,504 bytes, respectively; see
 and linker measurements. These are baseline measurements, not measurements
 of the current removal candidate. The RP2 port still links mbedTLS.
 
-The user reports that the current custom UF2 works on-device; preserve it as
-the rollback baseline. The Windows build remains subject to App Control
-blocking the locally built `mpy-cross.exe`; use an approved Linux build
-environment rather than bypassing that policy. Compatibility changes are not
-flashed automatically: first build and review a candidate, then get separate
-authorization before replacing the working image. Full module/language
-coverage, filesystem persistence, hardware API, and runtime memory results
-remain to be recorded.
+The RP2350 wrapper-fix candidate retains asyncio/uasyncio, select, and
+framebuf. Its versioned UF2 is
+[`releases/v1.29.0/PicoPython-v1.29-wrapper-fix.uf2`](releases/v1.29.0/PicoPython-v1.29-wrapper-fix.uf2),
+626,688 bytes, SHA-256
+`2c610c7f061e0989dd80b849f4dfa5deb88392d1d78202897263468b171861a6`.
+The earlier pre-wrapper-fix candidate is retained separately for comparison;
+it has a reported `import rp2` failure and is not the recommended image.
 
-The reviewed compatibility candidate retains asyncio/uasyncio, select, and
-framebuf. It is 626,688 bytes and uses UF2 SHA-256
-`7c03974c6ac6066253f86756bf089ccfe0f1b454516dbcdc303c747eb68ec158`.
-See [`docs/PR_REVIEW_REPORT.md`](docs/PR_REVIEW_REPORT.md) for the source
-review and outstanding hardware risks.
+The user reports that the wrapper-fix candidate passed Pico 2 boot/USB REPL,
+filesystem read/write/delete, asyncio, and acceptance tests. Build, source,
+and ELF checks were independently completed; the hardware results are
+user-reported. See [`docs/BUILD_RESULTS.md`](docs/BUILD_RESULTS.md) and
+[`docs/PR_REVIEW_REPORT.md`](docs/PR_REVIEW_REPORT.md) for details.
+
+The Windows build remains subject to App Control blocking the locally built
+`mpy-cross.exe`; use an approved Linux build environment rather than bypassing
+that policy. Do not flash automatically; preserve the known-good firmware as
+the rollback baseline.
 
 For USB REPL testing, use:
 

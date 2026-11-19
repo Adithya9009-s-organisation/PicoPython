@@ -100,4 +100,42 @@ baseline. Build artifacts are retained under the ignored Codespace
 The reproducibility patch hashes are:
 
 - `micropython-v1.29.0-string-moduledefs.patch`: `49ae4399f7f73b5a4d9e2261a62937afa88cb8446dec723407ec7b432181e238`
-- `micropython-v1.29.0-pruned-features.patch`: `ef721c68855e9559e947c2a30d6d154f880f635cdcf546a12e938814db923daa`
+- `micropython-v1.29.0-pruned-features.patch` before the RP2 wrapper fix:
+  `ef721c68855e9559e947c2a30d6d154f880f635cdcf546a12e938814db923daa`
+
+## RP2 wrapper-fix candidate
+
+The final isolated build used the reviewed board configuration and frozen
+manifest, with `asyncio`, `uasyncio`, `select`, and `framebuf` retained.
+
+| Measurement | Wrapper-fix candidate |
+| --- | ---: |
+| UF2 path | `releases/v1.29.0/PicoPython-v1.29-wrapper-fix.uf2` |
+| UF2 size | 626,688 bytes |
+| UF2 SHA-256 | `2c610c7f061e0989dd80b849f4dfa5deb88392d1d78202897263468b171861a6` |
+| ELF text | 323,280 bytes |
+| ELF data | 0 bytes |
+| ELF BSS | 4,508 bytes |
+| Linker-reported flash use | 313,044 bytes |
+| Linker-reported RAM use | 22,612 bytes |
+
+`picotool` identifies the image as RP2350 ARM Secure firmware with USB REPL.
+The ELF symbol audit found the retained `machine.Pin`, `SPI`, `I2C`, and
+`UART` types and no removed machine/RP2 API types. All ten acceptance scripts
+compiled with `mpy-cross`. The actual `rp2.py` module executed on the
+MicroPython Unix VM with a shim `_rp2` module in both PIO-enabled and
+PIO-disabled configurations. Portable language, async, filesystem, REPL, and
+memory checks passed on that VM.
+
+The user reports that this candidate booted on Pico 2 and passed USB REPL,
+filesystem read/write/delete, asyncio, and acceptance checks. Those physical
+results are user-reported; they were not independently captured by the build
+environment.
+
+The earlier pre-wrapper-fix candidate remains at
+`releases/v1.29.0/PicoPython-v1.29-reviewed-pre-wrapper-fix.uf2` for
+comparison (626,688 bytes; SHA-256
+`7c03974c6ac6066253f86756bf089ccfe0f1b454516dbcdc303c747eb68ec158`). It is
+not recommended because the user reported an import-time `rp2` failure.
+The updated `micropython-v1.29.0-pruned-features.patch` SHA-256 is
+`8eb5802e2978c7a97a9dabaf88d4052bf59ac662758295c500c7d783ce65399a`.
