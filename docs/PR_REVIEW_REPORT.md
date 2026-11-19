@@ -1,9 +1,9 @@
-# PR #3 Review Report
+# PicoPython RP2 Wrapper-Fix Candidate Report
 
-## Reviewed candidate
+## Candidate
 
-The compatibility candidate is build-verified but not device-validated.
-It retains the general-purpose features most relevant to PicoPython:
+The wrapper-fix candidate is built for MicroPython v1.29.0 on RP2350 and
+retains:
 asyncio/uasyncio, select, framebuf, USB CDC REPL, VFS/FAT/LittleFS, GC,
 Pin, SPI, I2C, UART, errno, io, collections, re, and existing core modules.
 
@@ -12,49 +12,61 @@ ADC, PWM, I2S, RTC, WDT, Timer, PIO, StateMachine, DMA, and DMATimer.
 The Pico SDK DMA component remains linked because the retained SPI
 implementation depends on it.
 
-## Build evidence
+It removes cmath and the scoped machine/RP2 APIs: ADC, PWM, I2S, RTC, WDT,
+Timer, PIO, StateMachine, DMA, and DMATimer. The Pico SDK DMA component
+remains linked because the retained SPI implementation depends on it.
 
-- Pinned source: MicroPython `0fd6c573ea815774668bbb16b8e197c8822368b2`
-- Toolchain: CMake 4.2.3, ARM GCC 14.2.1, parallelism `-j2`
-- Reviewed candidate UF2: 626,688 bytes
-- Reviewed candidate SHA256:
-  `7c03974c6ac6066253f86756bf089ccfe0f1b454516dbcdc303c747eb68ec158`
-- Stock comparison UF2: 661,504 bytes
-- Clean-build stock SHA256:
-  `fe5902a62eb79f76ff9d7d526b4de5b1f3873ab35f1a5fb2fcf065c9218c691b`
-- Reviewed candidate reduction: 34,816 bytes / 5.26%
+## Build and artifact
 
-Asyncio-only review: 615,936 bytes. Framebuf-only incremental cost: 10,752 bytes.
-The earlier asyncio/framebuf-stripped image measured 594,944 bytes but is not
-the reviewed candidate.
+- Pinned MicroPython source: `0fd6c573ea815774668bbb16b8e197c8822368b2`
+- Toolchain: CMake 4.2.3, ARM GCC 14.2.1, `-j2`
+- UF2: `releases/v1.29.0/PicoPython-v1.29-wrapper-fix.uf2`
+- UF2 size: 626,688 bytes
+- UF2 SHA-256: `2c610c7f061e0989dd80b849f4dfa5deb88392d1d78202897263468b171861a6`
+- ELF: text 323,280 bytes, data 0 bytes, BSS 4,508 bytes
+- Linker-reported flash use: 313,044 bytes; RAM use: 22,612 bytes
+- `picotool` identifies RP2350 ARM Secure firmware with USB REPL enabled.
+
+The earlier pre-wrapper-fix UF2 is preserved separately as
+`releases/v1.29.0/PicoPython-v1.29-reviewed-pre-wrapper-fix.uf2` (626,688
+bytes, SHA-256
+`7c03974c6ac6066253f86756bf089ccfe0f1b454516dbcdc303c747eb68ec158`). It is
+kept for comparison only; the user reported that it fails during `import rp2`.
 
 ## Patch review
 
-The 293-line RP2 patch is limited to:
+The feature patch retains the earlier conditional CMake/source/QSTR/SDK and
+machine/RP2 registration changes, and now also guards the PIO-dependent Python
+wrapper:
 
-1. Conditional RP2 CMake source, QSTR, and SDK component lists.
-2. Conditional PIO/DMA startup and soft-reset calls.
-3. Conditional machine RTC/Timer module registration.
-4. Conditional RP2 PIO/DMA module registration and declarations.
-5. Conditional ADC/PWM/I2S/WDT/Timer/RTC macros.
+- `PIOASMError` and `PIOASMEmit`
+- `_pio_funcs`, `_pio_directives`, and `_pio_instructions`
+- `asm_pio` and `asm_pio_encode`
 
-The patch applies and reverses cleanly on the exact pinned source.
-Trailing whitespace and patch line endings have been normalized.
+These definitions exist only when `PIO` is exported by `_rp2`; no placeholder
+PIO API or C registration is added. `rp2.py` remains in the frozen manifest.
+The source patch applies and reverse-checks cleanly against the pinned source.
 
-## Risks and pending validation
+`tests/hardware/api_surface.py` now asserts that the removed PIO wrapper names
+are absent while `machine.Pin`, `SPI`, `I2C`, and `UART` remain available.
 
-- No candidate has been flashed.
-- USB REPL behavior and startup stability are unverified on hardware.
-- SPI/I2C/UART runtime behavior is unverified.
-- Pin behavior is unverified.
-- FAT/LittleFS persistence is unverified across soft reset and power cycle.
-- GC heap measurements are unverified.
-- Network and Bluetooth remain unconfigured, but this has not been
-  device-audited.
+## Validation status
+
+- Build-verified: clean RP2350 build, UF2 hash, and ELF API-symbol audit.
+- Source-audited: PIO wrapper helpers are guarded; retained C APIs remain
+  registered and removed API types are absent.
+- Runtime-tested on the MicroPython Unix VM: the actual `rp2.py` imports with
+  PIO both absent and present, using a test `_rp2` shim.
+- Acceptance scripts: all ten compile with `mpy-cross`; portable language,
+  async, filesystem, REPL, and memory tests pass on the Unix VM.
+- Hardware-tested (user-reported): Pico 2 boot/REPL, filesystem
+  read/write/delete, asyncio, and the acceptance tests passed. These device
+  results were reported by the user and were not independently captured here.
 - No CPython standard-library implementation has been added.
 
-## Decision
+Network and Bluetooth remain unconfigured. The former pre-wrapper-fix UF2 is
+not the recommended image. Preserve the known-good firmware as the rollback
+baseline; do not format the filesystem.
 
-Do not merge or flash. Retain this configuration for hardware-acceptance
-review. Any further change should remain separate from the display Pico,
-CPython module work, or filesystem-formatting tests.
+The candidate is prepared as a versioned artifact for this release branch.
+Future CPython module additions remain a separate phase.
