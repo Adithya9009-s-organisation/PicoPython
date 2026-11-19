@@ -65,13 +65,30 @@ are 666,624 bytes and 661,504 bytes, respectively; see
 and linker measurements. These are baseline measurements, not measurements
 of the current removal candidate. The RP2 port still links mbedTLS.
 
-The RP2350 wrapper-fix candidate retains asyncio/uasyncio, select, and
-framebuf. Its versioned UF2 is
-[`releases/v1.29.0/PicoPython-v1.29-wrapper-fix.uf2`](releases/v1.29.0/PicoPython-v1.29-wrapper-fix.uf2),
-626,688 bytes, SHA-256
-`2c610c7f061e0989dd80b849f4dfa5deb88392d1d78202897263468b171861a6`.
-The earlier pre-wrapper-fix candidate is retained separately for comparison;
-it has a reported `import rp2` failure and is not the recommended image.
+## Versioned firmware artifacts
+
+The stripped firmware remains the existing rollback/base image. The Phase 2
+image is a separate, additive release containing nine selected
+standard-library compatibility modules; it does not replace the stripped UF2.
+
+| Artifact | Description | Size | SHA-256 |
+|---|---|---:|---|
+| [`releases/v1.29.0/PicoPython-v1.29-wrapper-fix.uf2`](releases/v1.29.0/PicoPython-v1.29-wrapper-fix.uf2) | Stripped PicoPython firmware; retained unchanged as the base/rollback image | 626,688 B | `2c610c7f061e0989dd80b849f4dfa5deb88392d1d78202897263468b171861a6` |
+| [`releases/v1.29.0/PicoPython-v1.29.0-stdlib-nine.uf2`](releases/v1.29.0/PicoPython-v1.29.0-stdlib-nine.uf2) | Phase 2 selective CPython-compatibility firmware: `string`, `statistics`, `pathlib`, `shutil`, `logging`, `unittest`, `copy`, `functools`, and `itertools` | 668,160 B | `bb8ac649cc398b5b33b3683993e6eb7a0363f0f53a6bb8cf26cbe6049ae0ffa1` |
+
+The Phase 2 UF2 is based on the same PicoPython board configuration, with the
+nine modules frozen into firmware and the `islice`/`tee` fixes. It does not
+change the production manifest or remove the separate stripped artifact. The
+user reports that the Phase 2 image passed physical Pico 2 testing: all nine
+modules tested, 231 tests passed, zero unexpected failures. The
+[Phase 2 final validation report](docs/STDLIB_PHASE2_FINAL_VALIDATION.md)
+records compatibility limitations and the remaining heap/baseline evidence
+gaps.
+
+The earlier pre-wrapper-fix candidate remains separately available for
+comparison at
+[`releases/v1.29.0/PicoPython-v1.29-reviewed-pre-wrapper-fix.uf2`](releases/v1.29.0/PicoPython-v1.29-reviewed-pre-wrapper-fix.uf2);
+it has a reported `import rp2` failure and is not recommended.
 
 The user reports that the wrapper-fix candidate passed Pico 2 boot/USB REPL,
 filesystem read/write/delete, asyncio, and acceptance tests. Build, source,
